@@ -1,0 +1,357 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // === Global Hardened Primitives ===
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // === Entity Validation Blueprints ===
+    function isValidUserProfile(data) {
+      return data.keys().hasAll([
+          'uid', 'displayName', 'clubName', 'coins', 'gems', 'xp', 'trophies',
+          'leagueTier', 'formation', 'kitId', 'ballId', 'bootId', 'celebrationId',
+          'subscriptionTier', 'language', 'dailyRewardStreak', 'matchesPlayed',
+          'wins', 'goalsScored', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'displayName', 'clubName', 'clubMotto', 'clubOpen', 'countryCode', 'crestId', 'clubLogo', 'linkedProviders',
+          'coins', 'gems', 'xp', 'trophies',
+          'leagueTier', 'formation', 'kitId', 'shortsId', 'socksId', 'ballId', 'bootId', 'celebrationId',
+          'subscriptionTier', 'language', 'dailyRewardStreak', 'lastDailyClaimAt',
+          'lastFreePrizeClaimAt', 'goalsPrizeProgress',
+          'matchesPlayed', 'wins', 'goalsScored', 'unlockedIds', 'cardLevels',
+          'dailyMissions', 'victoryPacks', 'settings', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 64
+        && data.clubName is string && data.clubName.size() >= 1 && data.clubName.size() <= 48
+        && (!('clubMotto' in data) || (data.clubMotto is string && data.clubMotto.size() <= 64))
+        && (!('clubOpen' in data) || data.clubOpen is bool)
+        && (!('countryCode' in data) || (data.countryCode is string && data.countryCode.size() >= 2 && data.countryCode.size() <= 4))
+        && (!('crestId' in data) || (data.crestId is string && data.crestId.size() >= 1 && data.crestId.size() <= 48))
+        && (!('clubLogo' in data) || (
+          data.clubLogo is map
+          && data.clubLogo.keys().hasOnly(['shieldShape', 'shieldColor', 'patternStyle', 'patternColor', 'emblemStyle', 'emblemColor', 'ornamentStyle', 'ornamentColor'])
+        ))
+        && (!('linkedProviders' in data) || (data.linkedProviders is list && data.linkedProviders.size() <= 3 && (data.linkedProviders.size() == 0 || data.linkedProviders[0] in ['google', 'facebook', 'apple'])))
+        && data.coins is int && data.coins >= 0 && data.coins <= 100000000
+        && data.gems is int && data.gems >= 0 && data.gems <= 10000000
+        && data.xp is int && data.xp >= 0 && data.xp <= 100000000
+        && data.trophies is int && data.trophies >= 0 && data.trophies <= 1000000
+        && data.leagueTier in ['Rookie', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Football Legend']
+        && data.formation in ['4-4-2', '4-3-3', '5-3-2', '4-3-2-1', '4-5-1', '3-4-3', '3-5-2']
+        && data.kitId is string && data.kitId.size() >= 1 && data.kitId.size() <= 48
+        && (!('shortsId' in data) || (data.shortsId is string && data.shortsId.size() >= 1 && data.shortsId.size() <= 48))
+        && (!('socksId' in data) || (data.socksId is string && data.socksId.size() >= 1 && data.socksId.size() <= 48))
+        && data.ballId is string && data.ballId.size() >= 1 && data.ballId.size() <= 48
+        && data.bootId is string && data.bootId.size() >= 1 && data.bootId.size() <= 48
+        && data.celebrationId is string && data.celebrationId.size() >= 1 && data.celebrationId.size() <= 48
+        && data.subscriptionTier in ['Free', 'Pro Pass', 'Legend VIP']
+        && data.language in ['en', 'es', 'fr', 'pt', 'de']
+        && data.dailyRewardStreak is int && data.dailyRewardStreak >= 0 && data.dailyRewardStreak <= 3650
+        && (!('lastDailyClaimAt' in data) || (data.lastDailyClaimAt is string && data.lastDailyClaimAt.size() <= 40))
+        && (!('lastFreePrizeClaimAt' in data) || (data.lastFreePrizeClaimAt is string && data.lastFreePrizeClaimAt.size() <= 40))
+        && (!('goalsPrizeProgress' in data) || (data.goalsPrizeProgress is int && data.goalsPrizeProgress >= 0 && data.goalsPrizeProgress <= 10000))
+        && data.matchesPlayed is int && data.matchesPlayed >= 0 && data.matchesPlayed <= 1000000
+        && data.wins is int && data.wins >= 0 && data.wins <= 1000000
+        && data.goalsScored is int && data.goalsScored >= 0 && data.goalsScored <= 10000000
+        && (!('unlockedIds' in data) || (data.unlockedIds is list && data.unlockedIds.size() <= 160 && (data.unlockedIds.size() == 0 || data.unlockedIds[0] is string)))
+        && (!('cardLevels' in data) || (data.cardLevels is map && data.cardLevels.size() <= 40))
+        && (!('dailyMissions' in data) || (
+          data.dailyMissions is map
+          && data.dailyMissions.keys().hasAll(['assignedAt', 'resetAt', 'tasks'])
+          && data.dailyMissions.keys().hasOnly(['assignedAt', 'resetAt', 'tasks'])
+          && data.dailyMissions.assignedAt is string && data.dailyMissions.assignedAt.size() <= 40
+          && data.dailyMissions.resetAt is string && data.dailyMissions.resetAt.size() <= 40
+          && data.dailyMissions.tasks is list && data.dailyMissions.tasks.size() == 3
+          && data.dailyMissions.tasks[0] is map
+        ))
+        && (!('victoryPacks' in data) || (data.victoryPacks is list && data.victoryPacks.size() == 4 && data.victoryPacks[0] is map))
+        && (!('settings' in data) || (
+          data.settings is map
+          && data.settings.keys().hasOnly(['sfxEnabled', 'crowdEnabled', 'controlScheme', 'joystickSensitivity', 'tutorialCompleted'])
+        ))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateInfo(data) {
+      return data.keys().hasAll(['uid', 'email', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 128
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidMatchRecord(data) {
+      return data.keys().hasAll([
+          'userId', 'mode', 'opponentName', 'goalsFor', 'goalsAgainst',
+          'shots', 'shotsOnTarget', 'tackles', 'passesCompleted',
+          'possessionPct', 'trophiesDelta', 'coinsEarned', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'mode', 'opponentName', 'goalsFor', 'goalsAgainst',
+          'shots', 'shotsOnTarget', 'tackles', 'passesCompleted',
+          'possessionPct', 'trophiesDelta', 'coinsEarned', 'createdAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.mode in ['Quick Match', 'League Cup', 'Practice Drill', 'Custom Tournament']
+        && data.opponentName is string && data.opponentName.size() >= 1 && data.opponentName.size() <= 48
+        && data.goalsFor is int && data.goalsFor >= 0 && data.goalsFor <= 99
+        && data.goalsAgainst is int && data.goalsAgainst >= 0 && data.goalsAgainst <= 99
+        && data.shots is int && data.shots >= 0 && data.shots <= 200
+        && data.shotsOnTarget is int && data.shotsOnTarget >= 0 && data.shotsOnTarget <= 200
+        && data.tackles is int && data.tackles >= 0 && data.tackles <= 200
+        && data.passesCompleted is int && data.passesCompleted >= 0 && data.passesCompleted <= 500
+        && data.possessionPct is int && data.possessionPct >= 0 && data.possessionPct <= 100
+        && data.trophiesDelta is int && data.trophiesDelta >= -100 && data.trophiesDelta <= 200
+        && data.coinsEarned is int && data.coinsEarned >= 0 && data.coinsEarned <= 100000
+        && data.createdAt is timestamp;
+    }
+
+    function isValidClub(data) {
+      return data.keys().hasAll([
+          'clubId', 'name', 'tag', 'ownerId', 'leagueTier',
+          'memberCount', 'totalTrophies', 'crestColor', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'clubId', 'name', 'tag', 'ownerId', 'leagueTier',
+          'memberCount', 'totalTrophies', 'crestColor', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.clubId)
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 48
+        && data.tag is string && data.tag.size() >= 2 && data.tag.size() <= 6
+        && isValidId(data.ownerId)
+        && data.leagueTier is string && data.leagueTier.size() >= 2 && data.leagueTier.size() <= 32
+        && data.memberCount is int && data.memberCount >= 1 && data.memberCount <= 50
+        && data.totalTrophies is int && data.totalTrophies >= 0 && data.totalTrophies <= 10000000
+        && data.crestColor is string && data.crestColor.size() >= 4 && data.crestColor.size() <= 16
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidClubMember(data, clubId) {
+      return data.keys().hasAll(['memberId', 'clubId', 'displayName', 'role', 'trophies', 'joinedAt'])
+        && data.keys().hasOnly(['memberId', 'clubId', 'displayName', 'role', 'trophies', 'joinedAt'])
+        && isValidId(data.memberId)
+        && isValidId(data.clubId)
+        && data.clubId == clubId
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 64
+        && data.role in ['Owner', 'Captain', 'Member']
+        && data.trophies is int && data.trophies >= 0 && data.trophies <= 1000000
+        && data.joinedAt is timestamp;
+    }
+
+    function isValidTournament(data) {
+      return data.keys().hasAll([
+          'tournamentId', 'title', 'ownerId', 'status',
+          'maxTeams', 'entryFeeCoins', 'prizeCoins', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'tournamentId', 'title', 'ownerId', 'status',
+          'maxTeams', 'entryFeeCoins', 'prizeCoins', 'winnerName', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.tournamentId)
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 64
+        && isValidId(data.ownerId)
+        && data.status in ['open', 'in_progress', 'completed']
+        && data.maxTeams is int && data.maxTeams >= 4 && data.maxTeams <= 32
+        && data.entryFeeCoins is int && data.entryFeeCoins >= 0 && data.entryFeeCoins <= 100000
+        && data.prizeCoins is int && data.prizeCoins >= 0 && data.prizeCoins <= 1000000
+        && (!('winnerName' in data) || (data.winnerName is string && data.winnerName.size() <= 64))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidLeaderboardEntry(data) {
+      return data.keys().hasAll(['userId', 'displayName', 'clubName', 'trophies', 'leagueTier', 'wins', 'updatedAt'])
+        && data.keys().hasOnly(['userId', 'displayName', 'clubName', 'trophies', 'leagueTier', 'wins', 'updatedAt'])
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 64
+        && data.clubName is string && data.clubName.size() >= 1 && data.clubName.size() <= 48
+        && data.trophies is int && data.trophies >= 0 && data.trophies <= 1000000
+        && data.leagueTier is string && data.leagueTier.size() >= 2 && data.leagueTier.size() <= 32
+        && data.wins is int && data.wins >= 0 && data.wins <= 1000000
+        && data.updatedAt is timestamp;
+    }
+
+    // === User Profiles & Isolated PII & Match Analytics ===
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidUserProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName', 'clubName', 'clubMotto', 'clubOpen', 'countryCode', 'crestId', 'clubLogo', 'linkedProviders',
+            'coins', 'gems', 'xp', 'trophies',
+            'leagueTier', 'formation', 'kitId', 'shortsId', 'socksId', 'ballId', 'bootId',
+            'celebrationId', 'subscriptionTier', 'language',
+            'dailyRewardStreak', 'lastDailyClaimAt', 'lastFreePrizeClaimAt',
+            'goalsPrizeProgress', 'matchesPlayed',
+            'wins', 'goalsScored', 'unlockedIds', 'cardLevels', 'dailyMissions',
+            'victoryPacks', 'settings', 'updatedAt'
+          ])
+        );
+      allow delete: if false;
+
+      match /private/{docId} {
+        allow get: if isValidId(userId) && isValidId(docId) && isOwner(userId) && isVerifiedUser();
+        allow list: if false;
+        allow create, update: if isValidId(userId)
+          && isValidId(docId)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidUserPrivateInfo(incoming())
+          && incoming().updatedAt == request.time;
+        allow delete: if false;
+      }
+
+      match /matches/{matchId} {
+        allow get: if isValidId(userId) && isValidId(matchId) && isOwner(userId);
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(matchId)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidMatchRecord(incoming())
+          && incoming().createdAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId));
+        allow update, delete: if false;
+      }
+    }
+
+    // === Clubs & Club Members ===
+    match /clubs/{clubId} {
+      allow get: if isValidId(clubId) && isSignedIn();
+      allow list: if isSignedIn() && resource.data.memberCount >= 1;
+      allow create: if isValidId(clubId)
+        && isVerifiedUser()
+        && isValidClub(incoming())
+        && incoming().clubId == clubId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(clubId)
+        && isVerifiedUser()
+        && isValidClub(incoming())
+        && incoming().clubId == existing().clubId
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (existing().ownerId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'tag', 'leagueTier', 'crestColor', 'memberCount', 'totalTrophies', 'updatedAt'])) ||
+          (incoming().diff(existing()).affectedKeys().hasOnly(['memberCount', 'totalTrophies', 'updatedAt']))
+        );
+      allow delete: if isValidId(clubId) && isVerifiedUser() && existing().ownerId == request.auth.uid;
+
+      match /members/{memberId} {
+        allow get: if isValidId(clubId) && isValidId(memberId) && isSignedIn();
+        allow list: if isSignedIn() && resource.data.clubId == clubId;
+        allow create: if isValidId(clubId)
+          && isValidId(memberId)
+          && isVerifiedUser()
+          && isValidClubMember(incoming(), clubId)
+          && memberId == request.auth.uid
+          && incoming().memberId == request.auth.uid
+          && incoming().joinedAt == request.time
+          && exists(/databases/$(database)/documents/clubs/$(clubId));
+        allow update: if isValidId(clubId)
+          && isValidId(memberId)
+          && isVerifiedUser()
+          && isValidClubMember(incoming(), clubId)
+          && incoming().memberId == existing().memberId
+          && incoming().clubId == existing().clubId
+          && incoming().joinedAt == existing().joinedAt
+          && (
+            (memberId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'trophies'])) ||
+            (get(/databases/$(database)/documents/clubs/$(clubId)).data.ownerId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['role']))
+          );
+        allow delete: if isValidId(clubId)
+          && isVerifiedUser()
+          && (memberId == request.auth.uid || get(/databases/$(database)/documents/clubs/$(clubId)).data.ownerId == request.auth.uid);
+      }
+    }
+
+    // === Custom Tournaments ===
+    match /tournaments/{tournamentId} {
+      allow get: if isValidId(tournamentId) && isSignedIn();
+      allow list: if isSignedIn() && resource.data.status in ['open', 'in_progress', 'completed'];
+      allow create: if isValidId(tournamentId)
+        && isVerifiedUser()
+        && isValidTournament(incoming())
+        && incoming().tournamentId == tournamentId
+        && incoming().ownerId == request.auth.uid
+        && incoming().status == 'open'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(tournamentId)
+        && isVerifiedUser()
+        && existing().status != 'completed'
+        && isValidTournament(incoming())
+        && incoming().tournamentId == existing().tournamentId
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && existing().ownerId == request.auth.uid
+        && (
+          (incoming().status in ['open', 'in_progress'] && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'status', 'maxTeams', 'prizeCoins', 'updatedAt'])) ||
+          (incoming().status == 'completed' && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'winnerName', 'updatedAt']))
+        );
+      allow delete: if isValidId(tournamentId) && isVerifiedUser() && existing().ownerId == request.auth.uid;
+    }
+
+    // === Global Leaderboard ===
+    match /leaderboard/{userId} {
+      allow get: if isValidId(userId) && isSignedIn();
+      allow list: if isSignedIn() && resource.data.trophies >= 0;
+      allow create, update: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidLeaderboardEntry(incoming())
+        && incoming().updatedAt == request.time;
+      allow delete: if false;
+    }
+  }
+}

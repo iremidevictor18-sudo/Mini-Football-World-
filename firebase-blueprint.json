@@ -1,0 +1,328 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public career profile and game progression for a Mini Football player.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "clubName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48
+        },
+        "clubMotto": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "clubOpen": {
+          "type": "boolean"
+        },
+        "countryCode": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 4
+        },
+        "crestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48
+        },
+        "clubLogo": {
+          "type": "object"
+        },
+        "linkedProviders": { "type": "array" },
+        "coins": { "type": "integer" },
+        "gems": { "type": "integer" },
+        "xp": { "type": "integer" },
+        "trophies": { "type": "integer" },
+        "leagueTier": {
+          "type": "string",
+          "enum": ["Rookie", "Bronze", "Silver", "Gold", "Platinum", "Diamond", "Football Legend"]
+        },
+        "formation": {
+          "type": "string",
+          "enum": ["4-4-2", "4-3-3", "5-3-2", "4-3-2-1", "4-5-1", "3-4-3", "3-5-2"]
+        },
+        "kitId": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "shortsId": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "socksId": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "ballId": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "bootId": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "celebrationId": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "subscriptionTier": {
+          "type": "string",
+          "enum": ["Free", "Pro Pass", "Legend VIP"]
+        },
+        "language": {
+          "type": "string",
+          "enum": ["en", "es", "fr", "pt", "de"]
+        },
+        "dailyRewardStreak": { "type": "integer" },
+        "lastDailyClaimAt": { "type": "string", "maxLength": 40 },
+        "lastFreePrizeClaimAt": { "type": "string", "maxLength": 40 },
+        "goalsPrizeProgress": { "type": "integer" },
+        "matchesPlayed": { "type": "integer" },
+        "wins": { "type": "integer" },
+        "goalsScored": { "type": "integer" },
+        "unlockedIds": { "type": "array" },
+        "cardLevels": { "type": "object" },
+        "dailyMissions": { "type": "object" },
+        "victoryPacks": { "type": "array" },
+        "settings": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "clubName",
+        "coins",
+        "gems",
+        "xp",
+        "trophies",
+        "leagueTier",
+        "formation",
+        "kitId",
+        "ballId",
+        "bootId",
+        "celebrationId",
+        "subscriptionTier",
+        "language",
+        "dailyRewardStreak",
+        "matchesPlayed",
+        "wins",
+        "goalsScored",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII storage for authenticated user email and account metadata.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "updatedAt"]
+    },
+    "MatchRecord": {
+      "title": "MatchRecord",
+      "description": "Analytics record for a completed football match.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["Quick Match", "League Cup", "Practice Drill", "Custom Tournament"]
+        },
+        "opponentName": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "goalsFor": { "type": "integer" },
+        "goalsAgainst": { "type": "integer" },
+        "shots": { "type": "integer" },
+        "shotsOnTarget": { "type": "integer" },
+        "tackles": { "type": "integer" },
+        "passesCompleted": { "type": "integer" },
+        "possessionPct": { "type": "integer" },
+        "trophiesDelta": { "type": "integer" },
+        "coinsEarned": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "mode",
+        "opponentName",
+        "goalsFor",
+        "goalsAgainst",
+        "shots",
+        "shotsOnTarget",
+        "tackles",
+        "passesCompleted",
+        "possessionPct",
+        "trophiesDelta",
+        "coinsEarned",
+        "createdAt"
+      ]
+    },
+    "Club": {
+      "title": "Club",
+      "description": "Player-created football club for social competition.",
+      "type": "object",
+      "properties": {
+        "clubId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": { "type": "string", "minLength": 2, "maxLength": 48 },
+        "tag": { "type": "string", "minLength": 2, "maxLength": 6 },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "leagueTier": { "type": "string", "minLength": 2, "maxLength": 32 },
+        "memberCount": { "type": "integer" },
+        "totalTrophies": { "type": "integer" },
+        "crestColor": { "type": "string", "minLength": 4, "maxLength": 16 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "clubId",
+        "name",
+        "tag",
+        "ownerId",
+        "leagueTier",
+        "memberCount",
+        "totalTrophies",
+        "crestColor",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ClubMember": {
+      "title": "ClubMember",
+      "description": "Membership record inside a club subcollection.",
+      "type": "object",
+      "properties": {
+        "memberId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "clubId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "role": { "type": "string", "enum": ["Owner", "Captain", "Member"] },
+        "trophies": { "type": "integer" },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["memberId", "clubId", "displayName", "role", "trophies", "joinedAt"]
+    },
+    "Tournament": {
+      "title": "Tournament",
+      "description": "Custom league tournament created by players.",
+      "type": "object",
+      "properties": {
+        "tournamentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["open", "in_progress", "completed"]
+        },
+        "maxTeams": { "type": "integer" },
+        "entryFeeCoins": { "type": "integer" },
+        "prizeCoins": { "type": "integer" },
+        "winnerName": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "tournamentId",
+        "title",
+        "ownerId",
+        "status",
+        "maxTeams",
+        "entryFeeCoins",
+        "prizeCoins",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Public global leaderboard ranking entry without PII.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "clubName": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "trophies": { "type": "integer" },
+        "leagueTier": { "type": "string", "minLength": 2, "maxLength": 32 },
+        "wins": { "type": "integer" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "displayName", "clubName", "trophies", "leagueTier", "wins", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Player career profile document (non-PII fields)."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated PII subcollection (email, private account info)."
+    },
+    "/users/{userId}/matches/{matchId}": {
+      "schema": { "$ref": "#/entities/MatchRecord" },
+      "description": "Historical match analytics records owned by userId."
+    },
+    "/clubs/{clubId}": {
+      "schema": { "$ref": "#/entities/Club" },
+      "description": "Player-created clubs."
+    },
+    "/clubs/{clubId}/members/{memberId}": {
+      "schema": { "$ref": "#/entities/ClubMember" },
+      "description": "Subcollection of club members."
+    },
+    "/tournaments/{tournamentId}": {
+      "schema": { "$ref": "#/entities/Tournament" },
+      "description": "Custom player-managed tournaments."
+    },
+    "/leaderboard/{userId}": {
+      "schema": { "$ref": "#/entities/LeaderboardEntry" },
+      "description": "Public leaderboard entries keyed by userId."
+    }
+  }
+}
